@@ -1,0 +1,59 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.datasets import load_diabetes
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.svm import SVC
+from sklearn.metrics import accuracy_score
+diabetes = load_diabetes(as_frame=True)
+df = diabetes.frame
+
+df.hist(bins=20, figsize=(15, 10))
+plt.suptitle('Distribution of Each Feature')
+plt.show()
+num_attributes = df.select_dtypes(include=[np.number]).shape[1]
+cat_attributes = df.select_dtypes(exclude=[np.number]).shape[1]
+num_classes = len(df['target'].unique())
+
+print(f'Number of numerical attributes: {num_attributes}')
+print(f'Number of categorical attributes: {cat_attributes}')
+print(f'Number of classes: {num_classes}')
+plt.figure(figsize=(12, 8))
+sns.heatmap(df.corr(), annot=True)
+plt.title('Heatmap of Feature Correlations')
+plt.show()
+X = df.drop('target', axis=1)
+y = df['target']
+
+splits = [(0.6, 0.4), (0.7, 0.3), (0.8, 0.2)]
+rf_accuracies = []
+svm_accuracies = []
+
+for train_size, test_size in splits:
+    X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=train_size, test_size=test_size, random_state=42)
+    
+    rf = RandomForestClassifier(random_state=42)
+    rf.fit(X_train, y_train)
+    y_pred_rf = rf.predict(X_test)
+    rf_accuracies.append(accuracy_score(y_test, y_pred_rf))
+    
+    svm = SVC(random_state=42)
+    svm.fit(X_train, y_train)
+    y_pred_svm = svm.predict(X_test)
+    svm_accuracies.append(accuracy_score(y_test, y_pred_svm))
+    print(f'Accuracy of each model in random forest:  {rf_accuracies}')
+    print(f'Accuracy of each model in support vector machine: {svm_accuracies}')
+
+print(f'Mean accuracy of Random Forest: {np.mean(rf_accuracies)}')
+print(f'Mean accuracy of Support Vector Machine: {np.mean(svm_accuracies)}')
+
+
+plt.figure(figsize=(5, 5))
+plt.plot(['60-40', '70-30', '80-20'], rf_accuracies, label='Random Forest', marker='o')
+plt.plot(['60-40', '70-30', '80-20'], svm_accuracies, label='SVM', marker='x')
+plt.xlabel('Train-Test Split')
+plt.ylabel('Accuracy')
+plt.title('Model Accuracy for Different Train-Test Splits')
+plt.show()
